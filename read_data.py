@@ -31,6 +31,7 @@ def load_dataset(full_path):
 def shuffle_and_split(X,Y, split):
 	idx = np.random.rand(*X.shape).argsort(axis=0)
 	X = np.take_along_axis(X,idx,axis=0)
+	idx = np.random.rand(*Y.shape).argsort(axis=0)
 	Y = np.take_along_axis(Y,idx,axis=0)
 	train_split = np.ceil(X.shape[0]*split).astype(int)
 	test_split = X.shape[0]-train_split
