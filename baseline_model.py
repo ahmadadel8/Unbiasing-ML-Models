@@ -2,12 +2,12 @@ import tensorflow as tf
 from tensorflow.keras import layers, Model
 
 class BaseLine(Model):
-    def __init__(self, n_layers=3, widths = [10,10,5], activation = 'relu'):
+    def __init__(self, widths = [10,10,5], activation = 'relu'):
         super(BaseLine, self).__init__()
-        for i in range(n_layers):
+        self.n_layers = len(widths)
+        for i in range(self.n_layers):
             setattr(self, f"layer_{i}", layers.Dense(widths[i], activation=activation))
         self.output_layer = layers.Dense(1, activation="sigmoid")
-        self.n_layers = n_layers
 
     def call(self,inputs):
         hidden = inputs

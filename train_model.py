@@ -7,7 +7,7 @@ full_path = 'adult-all.csv'
 # load the dataset
 X, Y = load_dataset(full_path)
 X_train,Y_train, X_test, Y_test = shuffle_and_split(X,Y, split=0.8)
-model = BaseLine()
+model = BaseLine([10,10,10,10])
 model.compile("adam", "binary_crossentropy", metrics=['accuracy'])
 
 tb_callback = tf.keras.callbacks.TensorBoard("logs/" + time_stamp + "baseline_model" + "/tensorboard/", update_freq=50, profile_batch = 0)
