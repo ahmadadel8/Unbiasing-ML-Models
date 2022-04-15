@@ -28,17 +28,6 @@ def load_dataset(full_path):
 	y = LabelEncoder().fit_transform(y)
 	return X, y
 
-def shuffle_and_split(X,Y, split):
-	idx = np.arange(X.shape[0])
-	np.random.shuffle(idx)
-	X = X[idx,...]
-	Y = Y[idx,...]
-	train_split = np.ceil(X.shape[0]*split).astype(int)
-	test_split = X.shape[0]-train_split
-	X_train,Y_train, X_test, Y_test = X[0:train_split], Y[0:train_split],X[test_split:], Y[test_split:]
-	return X_train,Y_train, X_test, Y_test
-
-
 if __name__ == "__main__":
 	# define the location of the dataset
 	full_path = 'adult.data'
