@@ -41,7 +41,7 @@ def shuffle_and_split(X,Y, split):
 
 if __name__ == "__main__":
 	# define the location of the dataset
-	full_path = 'adult-all.csv'
+	full_path = 'adult.data'
 	# load the dataset
 	X, y = load_dataset(full_path)
 	# print(X[0])
