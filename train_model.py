@@ -6,8 +6,9 @@ from datetime import datetime
 from loss import *
 
 LAMBDA_CONSTRAINT= 5
+PATIENCE = 10
 best_p = 0
-
+epoch_best = 0
 time_stamp = datetime.now().strftime("%Y-%m-%dT%H.%M")
 
 
@@ -42,11 +43,11 @@ def log():
         else:
             f.write(f"Constrained model\n lambda: {LAMBDA_CONSTRAINT}\n")
             model_name = f"model_lambda_{LAMBDA_CONSTRAINT}_{time_stamp}.tf"
-        f.write(f'Epoch {i} Train Loss: {mean_train_loss:=4.4f}, accuracy: {mean_train_acc:=4.4f}, bce: {mean_train_bce:=4.4f}, constraint: {mean_train_constraint:=4.4f}\n')
+        f.write(f'Epoch {epoch} Train Loss: {mean_train_loss:=4.4f}, accuracy: {mean_train_acc:=4.4f}, bce: {mean_train_bce:=4.4f}, constraint: {mean_train_constraint:=4.4f}\n')
         f.write(f'          Val Loss: {mean_val_loss:=4.4f}, accuracy: {mean_val_acc:=4.4f}, bce: {mean_val_bce:=4.4f}, constraint: {mean_val_constraint:=4.4f}, prule: {p_value:=4.4f}\n')
         model.save(model_name)
 
-for i in range(100):
+for epoch in range(5000):
     try:
         for x, protected_attribute, y in ds_train.batch(64):
             with tf.GradientTape() as tape:
@@ -74,8 +75,13 @@ for i in range(100):
         for x,p,y in ds_val.batch(50000):
             model_out = model(x)
             p_value = p_rule(model_out, p)
-        if p_value > best_p and i > 10 and LAMBDA_CONSTRAINT > 0:
+        if p_value > best_p and epoch > 10 and LAMBDA_CONSTRAINT > 0:
             log()
+            best_p = p_value
+            epoch_best = epoch
+        if epoch + PATIENCE > epoch_best and epoch > 10 and LAMBDA_CONSTRAINT > 0:
+            print(f"EARLY STOPPING DUE TO THE PASSAGE OF {PATIENCE} EPOCHS WITHOUT IMPROVEMENT IN PRULE")
+            break
 
         mean_train_loss = train_loss.result()
         mean_train_acc = train_acc.result()
@@ -87,7 +93,7 @@ for i in range(100):
         mean_val_bce = val_bce.result()
         mean_val_constraint = val_constraint.result()        
         
-        print(f'Epoch {i} Train Loss: {mean_train_loss:=4.4f}, accuracy: {mean_train_acc:=4.4f}, bce: {mean_train_bce:=4.4f}, constraint: {mean_train_constraint:=4.4f}')
+        print(f'Epoch {epoch} Train Loss: {mean_train_loss:=4.4f}, accuracy: {mean_train_acc:=4.4f}, bce: {mean_train_bce:=4.4f}, constraint: {mean_train_constraint:=4.4f}')
         print(f'          Val Loss: {mean_val_loss:=4.4f}, accuracy: {mean_val_acc:=4.4f}, bce: {mean_val_bce:=4.4f}, constraint: {mean_val_constraint:=4.4f}, prule: {p_value:=4.4f}')
 
         train_loss.reset_state()
@@ -97,6 +103,7 @@ for i in range(100):
         val_loss.reset_state()
         val_p_rule.reset_state()
         val_acc.reset_state()
+
     except KeyboardInterrupt:
         break
 if LAMBDA_CONSTRAINT == 0:
