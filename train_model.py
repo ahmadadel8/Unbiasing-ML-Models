@@ -6,7 +6,7 @@ from datetime import datetime
 from loss import *
 
 LAMBDA_CONSTRAINT= 5
-PATIENCE = 10
+PATIENCE = 500
 best_p = 0
 epoch_best = 0
 time_stamp = datetime.now().strftime("%Y-%m-%dT%H.%M")
@@ -75,13 +75,7 @@ for epoch in range(5000):
         for x,p,y in ds_val.batch(50000):
             model_out = model(x)
             p_value = p_rule(model_out, p)
-        if p_value > best_p and epoch > 10 and LAMBDA_CONSTRAINT > 0:
-            log()
-            best_p = p_value
-            epoch_best = epoch
-        if epoch + PATIENCE > epoch_best and epoch > 10 and LAMBDA_CONSTRAINT > 0:
-            print(f"EARLY STOPPING DUE TO THE PASSAGE OF {PATIENCE} EPOCHS WITHOUT IMPROVEMENT IN PRULE")
-            break
+
 
         mean_train_loss = train_loss.result()
         mean_train_acc = train_acc.result()
@@ -93,6 +87,14 @@ for epoch in range(5000):
         mean_val_bce = val_bce.result()
         mean_val_constraint = val_constraint.result()        
         
+        if p_value > best_p and epoch > 10 and LAMBDA_CONSTRAINT > 0:
+            log()
+            best_p = p_value
+            epoch_best = epoch
+        if epoch_best + PATIENCE < epoch and epoch > 20 and LAMBDA_CONSTRAINT > 0 and mean_val_acc > 0.8:
+            print(f"EARLY STOPPING DUE TO THE PASSAGE OF {PATIENCE} EPOCHS WITHOUT IMPROVEMENT IN PRULE")
+            break
+
         print(f'Epoch {epoch} Train Loss: {mean_train_loss:=4.4f}, accuracy: {mean_train_acc:=4.4f}, bce: {mean_train_bce:=4.4f}, constraint: {mean_train_constraint:=4.4f}')
         print(f'          Val Loss: {mean_val_loss:=4.4f}, accuracy: {mean_val_acc:=4.4f}, bce: {mean_val_bce:=4.4f}, constraint: {mean_val_constraint:=4.4f}, prule: {p_value:=4.4f}')
 
