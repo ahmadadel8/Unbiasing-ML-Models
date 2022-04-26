@@ -6,7 +6,7 @@ from datetime import datetime
 from loss import *
 
 LAMBDA_CONSTRAINT= 5
-PATIENCE = 500
+PATIENCE = 50
 best_p = 0
 epoch_best = 0
 time_stamp = datetime.now().strftime("%Y-%m-%dT%H.%M")
