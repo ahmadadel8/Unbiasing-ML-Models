@@ -1,12 +1,15 @@
 import os
+
+from sklearn.model_selection import learning_curve
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 from baseline_model import * 
 from read_data import * 
 from datetime import datetime
 from loss import *
 
-LAMBDA_CONSTRAINT= 5
-PATIENCE = 50
+LAMBDA_CONSTRAINT= 8
+PATIENCE = 20
+LR = 0.01
 best_p = 0
 epoch_best = 0
 time_stamp = datetime.now().strftime("%Y-%m-%dT%H.%M")
@@ -16,27 +19,21 @@ time_stamp = datetime.now().strftime("%Y-%m-%dT%H.%M")
 ds_train, ds_val = load_dataset("adult_wo_relationship.data", "adult_wo_relationship.test", [8])
 model = BaseLine()
 
-tb_callback = tf.keras.callbacks.TensorBoard("logs/" + time_stamp + "baseline_model" + "/tensorboard/", update_freq=50, profile_batch = 0)
-earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
-ckpts = tf.keras.callbacks.ModelCheckpoint("logs/" + time_stamp + "baseline_model" +"/checkpoints/cp-{epoch:04d}.ckpt", save_best_only = True)
-
 train_loss = tf.keras.metrics.Mean()
 train_bce = tf.keras.metrics.Mean()
 train_constraint = tf.keras.metrics.Mean()
-train_p_rule = tf.keras.metrics.Mean()
 train_acc = tf.keras.metrics.BinaryAccuracy()
-
 
 val_loss = tf.keras.metrics.Mean()
 val_bce = tf.keras.metrics.Mean()
 val_constraint = tf.keras.metrics.Mean()
-val_p_rule = tf.keras.metrics.Mean()
 val_acc = tf.keras.metrics.BinaryAccuracy()
 
-optimizer = tf.keras.optimizers.Adam()
+optimizer = tf.keras.optimizers.Adam(learning_rate = LR)
+
 
 def log():
-    with open(f'log_{time_stamp}.txt', 'w') as f:
+    with open(f'log_lambda_{LAMBDA_CONSTRAINT}.txt', 'w') as f:
         if LAMBDA_CONSTRAINT == 0:
             f.write(f"baseline unconstrained model\n")
             model_name = f"baseline_model_{time_stamp}.tf"
@@ -53,8 +50,8 @@ for epoch in range(5000):
             with tf.GradientTape() as tape:
                 out = model(x)
                 bce, constraint = fairness_constaint_bce(out, protected_attribute, y)
-                loss = bce+ LAMBDA_CONSTRAINT*constraint
-
+                loss = bce + LAMBDA_CONSTRAINT*constraint
+                
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
@@ -66,7 +63,7 @@ for epoch in range(5000):
         for x, protected_attribute, y in ds_val.batch(64):
             out = model(x)
             bce, constraint = fairness_constaint_bce(out, protected_attribute, y)
-            loss = bce+ LAMBDA_CONSTRAINT*constraint
+            loss = bce + LAMBDA_CONSTRAINT * constraint
 
             val_loss.update_state(loss)
             val_bce.update_state(bce)
@@ -87,7 +84,7 @@ for epoch in range(5000):
         mean_val_bce = val_bce.result()
         mean_val_constraint = val_constraint.result()        
         
-        if p_value > best_p and epoch > 10 and LAMBDA_CONSTRAINT > 0:
+        if p_value > best_p and epoch > 10 and LAMBDA_CONSTRAINT > 0 and mean_val_acc > 0.8:
             log()
             best_p = p_value
             epoch_best = epoch
@@ -99,11 +96,13 @@ for epoch in range(5000):
         print(f'          Val Loss: {mean_val_loss:=4.4f}, accuracy: {mean_val_acc:=4.4f}, bce: {mean_val_bce:=4.4f}, constraint: {mean_val_constraint:=4.4f}, prule: {p_value:=4.4f}')
 
         train_loss.reset_state()
-        train_p_rule.reset_state()
+        train_bce.reset_state()
+        train_constraint.reset_state()
         train_acc.reset_state()
 
         val_loss.reset_state()
-        val_p_rule.reset_state()
+        val_bce.reset_state()
+        val_constraint.reset_state()
         val_acc.reset_state()
 
     except KeyboardInterrupt:

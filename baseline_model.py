@@ -25,6 +25,6 @@ class BaseLine(Model):
 
 if __name__ == "__main__":
     model = BaseLine()
-    # model.build((None,104))
+    # model.build((None,13))
     # model.summary()
     model.model().summary()

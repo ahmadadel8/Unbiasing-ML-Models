@@ -1,10 +1,19 @@
 import tensorflow as tf
+
+def diff_abs(x):
+    return tf.nn.relu(x) + tf.nn.relu(-x)
+
 def fairness_constaint_bce(model_out, protected_attribute, y_true):
+
+    var = tf.cast(protected_attribute - tf.reduce_mean(protected_attribute), tf.float32)
+    dot_product = var* model_out
+    constraint = diff_abs(tf.reduce_mean(dot_product))
+
     loss_fn = tf.keras.losses.BinaryCrossentropy()
-    constraint = tf.reduce_mean(tf.cast(protected_attribute - tf.reduce_mean(protected_attribute), tf.float32) * model_out)
     y_true = tf.cast(y_true, tf.float32)
     loss = loss_fn(y_true,model_out)
-    return loss, tf.math.abs(constraint)
+    
+    return loss, constraint
 
 def p_rule(model_out, protected_attribute):
     threshold = 0.5
