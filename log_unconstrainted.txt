@@ -1,0 +1,3 @@
+baseline unconstrained model
+Epoch 436 Train Loss: 0.3266, accuracy: 0.8466, bce: 0.3266, constraint: 0.0406
+          Val Loss: 0.3241, accuracy: 0.8497, bce: 0.3241, constraint: 0.0363, prule: 0.2499

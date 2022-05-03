@@ -1,0 +1,4 @@
+Constrained model
+ lambda: 4
+Epoch 15 Train Loss: 0.4558, accuracy: 0.8107, bce: 0.4033, constraint: 0.0131
+          Val Loss: 0.4438, accuracy: 0.8160, bce: 0.3977, constraint: 0.0115, prule: 0.5377
