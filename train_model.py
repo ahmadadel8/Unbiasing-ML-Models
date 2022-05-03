@@ -5,7 +5,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from baseline_model import * 
 from read_data import * 
 from datetime import datetime
-from loss import *
+from metrics import *
 
 LAMBDA_CONSTRAINT= 8
 PATIENCE = 20
